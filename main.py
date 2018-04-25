@@ -17,7 +17,7 @@ import logging
 import requests 
 
 from flask import Flask
-
+from scripts import bigquery
 
 app = Flask(__name__)
 
@@ -33,6 +33,10 @@ def hello():
     response = requests.get("https://rbelb0crz5.execute-api.eu-central-1.amazonaws.com/prod/google?query=zacusca", headers=headers)
     return response.content
 
+@app.route('/test/<string:test_param>')
+def test(test_param):
+    """ Testing """
+    bigquery.create_dataset(test_param)
 
 @app.errorhandler(500)
 def server_error(e):
