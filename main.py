@@ -64,11 +64,11 @@ def aws_search(query):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
-        return render_template('search.html', title='Gingo Search')
+        return render_template('index.html', title='Gingo Search')
     elif request.method == 'POST':
         query = request.form['query']
         results = aws_search(query)
-        return render_template('search.html', title='Gingo Search', results=results)
+        return render_template('index.html', title='Gingo Search', results=results)
 
 
 @app.route('/search')

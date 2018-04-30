@@ -9,5 +9,54 @@
 {% endblock %}
 
 {% block content %}
-  <h1 class="main-title">Hello, Gingo here!</h1>
+<div class="main-search">
+    <h2 class="main-title">Gingo - Unified Search</h2>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <div class="form-container">
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="query">Query</label>
+                            <input type="text" class="form-control" name="query" id="query">
+                        </div>
+                        <button type="submit" class="btn btn-default center-block">Submit</button>
+                    </form>
+                </div> <!-- form-container -->
+            </div> <!-- col-md-4 -->
+            
+            {% if results %}
+                <div class="results-container">
+                    <div class="col-md-10 col-md-offset-1">
+                        <table class="table">
+                            <tr>
+                                <th>Result</th>
+                                <th>Google Position</th>
+                                <th>Bing Position</th>
+                                <th>DuckDuckGo Position</th>
+                                <th>Score</th>
+                            </tr>
+                            {% for result in results %}
+                                    {% set link, data_dict = result %}
+                                    {% set pos_google = data_dict.get('google') + 1 if data_dict.get('google') != None else 'N/A' %}
+                                    {% set pos_bing = data_dict.get('bing') + 1 if data_dict.get('bing') != None else 'N/A' %}
+                                    {% set pos_duckduckgo = data_dict.get('duckduckgo') + 1 if data_dict.get('duckduckgo') != None else 'N/A' %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ link }}">{{ data_dict['snippet'] }}</a>
+                                        </td>
+                                        <td> {{ pos_google }} </td>
+                                        <td> {{ pos_bing }} </td>
+                                        <td> {{ pos_duckduckgo }} </td>
+                                        <td> {{ data_dict.get('score') or 'N/A' }} </td>
+                                    </tr>
+                            {% endfor %}
+                        </table>
+                    </div> <!-- col-md-6 -->
+                </div> <!-- results-container -->
+            {% endif %}
+
+        </div> <!-- row -->
+    </div> <!-- container -->
+</div> <!-- main-search -->
 {% endblock %}
