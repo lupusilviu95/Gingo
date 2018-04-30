@@ -19,7 +19,11 @@ import json
 
 from flask import Flask, request
 from flask.json import jsonify
-from urlparse import urlparse
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 from scripts import bigquery
 
