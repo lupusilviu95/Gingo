@@ -1,42 +1,72 @@
-# Copyright 2015 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# [START app]
 import logging
 import requests 
+import json
 
-from flask import Flask
-from scripts import bigquery
-
-app = Flask(__name__)
+from flask import Flask, render_template, request, jsonify
+from flask_bootstrap import Bootstrap
 
 
-@app.route('/')
-def hello():
-    """Return a friendly HTTP greeting."""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-    }
 
-    response = requests.get("https://rbelb0crz5.execute-api.eu-central-1.amazonaws.com/prod/google?query=zacusca", headers=headers)
-    return response.content
+AWS_LAMBDA_BING = "https://rbelb0crz5.execute-api.eu-central-1.amazonaws.com/prod/bing?query={}"
+AWS_LAMBDA_GOOGLE= "https://rbelb0crz5.execute-api.eu-central-1.amazonaws.com/prod/google?query={}"
+AWS_LAMBDA_DUCKDUCKGO = "https://rbelb0crz5.execute-api.eu-central-1.amazonaws.com/prod/duckduckgo?query={}"
+
+
+app = Flask(
+    __name__,
+    template_folder='client/views',
+    static_folder='client/static'
+    )
+
+Bootstrap(app)
+
+
+@app.route('/', methods=['GET'])
+def index():
+    # """Return a friendly HTTP greeting."""
+    # headers = {
+    #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36",
+    #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+    # }
+
+    # response = requests.get("https://rbelb0crz5.execute-api.eu-central-1.amazonaws.com/prod/google?query=zacusca", headers=headers)
+    # return response.content
+    return render_template('index.html', title='Gingo')
+
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    if request.method == 'GET':
+        return render_template('search.html')
+    elif request.method == 'POST':
+        query = request.form['query']
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        }
+
+        request_url_google = AWS_LAMBDA_GOOGLE.format(query)
+        response_google = requests.get(request_url_google, headers=headers)
+        response_google = json.loads(response_google.content)
+
+        return render_template('search.html', results=response_google)
+
+        # request_url_bing = AWS_LAMBDA_BING.format(query)
+        # response_bing = requests.get(request_url_bing, headers=headers)
+
+        # request_url_duckduckgo = AWS_LAMBDA_DUCKDUCKGO.format(query)
+        # response_duckduckgo = requests.get(request_url_duckduckgo, headers=headers)
+        # return render_template()
+    else:
+        return 'Unknown method'
+
 
 @app.route('/test/<string:test_param>')
 def test(test_param):
     """ Testing """
     bigquery.create_dataset(test_param)
+
 
 @app.errorhandler(500)
 def server_error(e):
