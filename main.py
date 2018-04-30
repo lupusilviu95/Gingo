@@ -1,31 +1,15 @@
-# Copyright 2015 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# [START app]
 import logging
 import requests 
 import json
 
-from flask import Flask, request
-from flask.json import jsonify
+
+from flask import Flask, render_template, request, jsonify
+from flask_bootstrap import Bootstrap
 
 try:
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
-
-from scripts import bigquery
 
 BASE_URL = "https://rbelb0crz5.execute-api.eu-central-1.amazonaws.com/prod"
 HEADERS = {
@@ -36,12 +20,14 @@ HEADERS = {
 MAX_RESULTS = 10
 SCORES = {"google": 0.45, "bing": 0.35, "duckduckgo": 0.20}
 
-app = Flask(__name__)
+app = Flask(
+        __name__,
+        template_folder='client/views',
+        static_folder='client/static'
+    )
+Bootstrap(app)
 
-
-@app.route('/search')
-def search():
-    query = request.args.get("query")
+def aws_search(query):
     google_url = urlparse(BASE_URL + "/google")
     bing_url = urlparse(BASE_URL + "/bing")
     duck_url = urlparse(BASE_URL + "/duckduckgo")
@@ -64,7 +50,6 @@ def search():
             already_found[engine] = index
             already_found["snippet"] = result["snippet"] if len(result["snippet"]) > len(already_found.get("snippet", "")) else already_found.get("snippet", "")
             links[result["url"]] = already_found
-    
 
     for link, engine_results in links.items():
         score = 0 
@@ -73,14 +58,31 @@ def search():
                 score += SCORES[engine] * (MAX_RESULTS - position)
         links[link]["score"] = score
 
+    return sorted(links.items(), key=lambda a: a[1]["score"], reverse=True)
 
-    return jsonify(sorted(links.items(), key=lambda a: a[1]["score"], reverse=True))
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'GET':
+        return render_template('search.html', title='Gingo Search')
+    elif request.method == 'POST':
+        query = request.form['query']
+        results = aws_search(query)
+        return render_template('search.html', title='Gingo Search', results=results)
+
+
+@app.route('/search')
+def search():
+    query = request.args.get("query")
+    results = aws_search(query)
+    return jsonify(results)
 
 
 @app.route('/test/<string:test_param>')
 def test(test_param):
     """ Testing """
     bigquery.create_dataset(test_param)
+
 
 @app.errorhandler(500)
 def server_error(e):
@@ -92,7 +94,4 @@ def server_error(e):
 
 
 if __name__ == '__main__':
-    # This is used when running locally. Gunicorn is used to run the
-    # application on Google App Engine. See entrypoint in app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)
-# [END app]
