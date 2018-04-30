@@ -5,6 +5,7 @@ import json
 
 from flask import Flask, render_template, request, jsonify
 from flask_bootstrap import Bootstrap
+from scripts import bigquery
 
 try:
     from urllib.parse import urlparse
@@ -50,6 +51,7 @@ def aws_search(query):
             already_found[engine] = index
             already_found["snippet"] = result["snippet"] if len(result["snippet"]) > len(already_found.get("snippet", "")) else already_found.get("snippet", "")
             links[result["url"]] = already_found
+        
 
     for link, engine_results in links.items():
         score = 0 
@@ -69,19 +71,22 @@ def index():
         query = request.form['query']
         results = aws_search(query)
         return render_template('index.html', title='Gingo Search', results=results)
+    else:
+        return "Unknown method"
 
 
 @app.route('/search')
 def search():
     query = request.args.get("query")
-    results = aws_search(query)
-    return jsonify(results)
 
+    cached_results = bigquery.search(query)
 
-@app.route('/test/<string:test_param>')
-def test(test_param):
-    """ Testing """
-    bigquery.create_dataset(test_param)
+    if len(cached_results) == 0:
+        results = aws_search(query)
+        err = bigquery.insert(query, results)
+        return jsonify(results)
+    else:
+        return jsonify(json.loads(cached_results[0]))
 
 
 @app.errorhandler(500)
