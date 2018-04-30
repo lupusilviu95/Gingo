@@ -15,23 +15,63 @@
 # [START app]
 import logging
 import requests 
+import json
 
-from flask import Flask
+from flask import Flask, request
+from flask.json import jsonify
+from urlparse import urlparse
+
 from scripts import bigquery
 
-app = Flask(__name__)
-
-
-@app.route('/')
-def hello():
-    """Return a friendly HTTP greeting."""
-    headers = {
+BASE_URL = "https://rbelb0crz5.execute-api.eu-central-1.amazonaws.com/prod"
+HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
     }
 
-    response = requests.get("https://rbelb0crz5.execute-api.eu-central-1.amazonaws.com/prod/google?query=zacusca", headers=headers)
-    return response.content
+MAX_RESULTS = 10
+SCORES = {"google": 0.45, "bing": 0.35, "duckduckgo": 0.20}
+
+app = Flask(__name__)
+
+
+@app.route('/search')
+def search():
+    query = request.args.get("query")
+    google_url = urlparse(BASE_URL + "/google")
+    bing_url = urlparse(BASE_URL + "/bing")
+    duck_url = urlparse(BASE_URL + "/duckduckgo")
+    params = {"query": query}
+    google_response = requests.get(google_url.geturl(), headers=HEADERS, params=params)
+    bing_response = requests.get(bing_url.geturl(), headers=HEADERS, params=params)
+    duck_response = requests.get(duck_url.geturl(), headers=HEADERS, params=params)
+
+    google_results = json.loads(google_response.content)
+    bing_results = json.loads(bing_response.content)
+    duckduckgo_results = json.loads(duck_response.content)
+
+    results_by_engine = {"google": google_results, "bing": bing_results, "duckduckgo": duckduckgo_results}
+
+    links = {}
+
+    for engine, results in results_by_engine.items():
+        for index, result in enumerate(results):
+            already_found = links.get(result["url"], {})
+            already_found[engine] = index
+            already_found["snippet"] = result["snippet"] if len(result["snippet"]) > len(already_found.get("snippet", "")) else already_found.get("snippet", "")
+            links[result["url"]] = already_found
+    
+
+    for link, engine_results in links.items():
+        score = 0 
+        for engine, position in engine_results.items():
+            if engine != "snippet":
+                score += SCORES[engine] * (MAX_RESULTS - position)
+        links[link]["score"] = score
+
+
+    return jsonify(sorted(links.items(), key=lambda a: a[1]["score"], reverse=True))
+
 
 @app.route('/test/<string:test_param>')
 def test(test_param):
