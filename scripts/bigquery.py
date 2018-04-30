@@ -5,8 +5,7 @@ from google.cloud import bigquery
 
 
 def insert(query, data):
-	bigquery_client = bigquery.Client.from_service_account_json(
-        '/home/lupus/Faculty/Gingo/scripts/service_account.json')
+	bigquery_client = bigquery.Client()	
 	dataset_ref = bigquery_client.dataset("search")
 	table_ref = dataset_ref.table("result")
 	table = bigquery_client.get_table(table_ref)
@@ -15,9 +14,7 @@ def insert(query, data):
 	return errors
 
 def search(query):
-	bigquery_client = bigquery.Client.from_service_account_json(
-        '/home/lupus/Faculty/Gingo/scripts/service_account.json')
-
+	bigquery_client = bigquery.Client()
 	query_job = bigquery_client.query("Select * from `pcd-hw3-gingo.search.result` where query=\"{}\";".format(query))
 	results = []
 	for result in query_job.result():
