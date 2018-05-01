@@ -24,7 +24,7 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "uri": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:853662872684:function:bing-function/invocations",
+          "uri": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:189247411825:function:bing/invocations",
           "responses": {
             "default": {
               "statusCode": "200"
@@ -51,7 +51,7 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "uri": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:853662872684:function:duckduckgo-function/invocations",
+          "uri": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:189247411825:function:duckduckgo-function/invocations",
           "responses": {
             "default": {
               "statusCode": "200"
@@ -79,7 +79,7 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "uri": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:853662872684:function:google-function/invocations",
+          "uri": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:189247411825:function:google-function/invocations",
           "responses": {
             "default": {
               "statusCode": "200"
