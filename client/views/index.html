@@ -26,36 +26,37 @@
             </div> <!-- col-md-4 -->
             
             {% if results %}
-                <div class="results-container">
-                    <div class="col-md-10 col-md-offset-1">
-                        <table class="table">
-                            <tr>
-                                <th>Result</th>
-                                <th>Google Position</th>
-                                <th>Bing Position</th>
-                                <th>DuckDuckGo Position</th>
-                                <th>Domain</th>
-                                <th>Score</th>
-                            </tr>
-                            {% for result in results %}
-                                    {% set link, data_dict = result %}
-                                    {% set pos_google = data_dict.get('google') + 1 if data_dict.get('google') != None else 'N/A' %}
-                                    {% set pos_bing = data_dict.get('bing') + 1 if data_dict.get('bing') != None else 'N/A' %}
-                                    {% set pos_duckduckgo = data_dict.get('duckduckgo') + 1 if data_dict.get('duckduckgo') != None else 'N/A' %}
-                                    <tr>
-                                        <td>
-                                            <a href="{{ link }}">{{ data_dict['snippet'] | safe }}</a>
-                                        </td>
-                                        <td> {{ pos_google }} </td>
-                                        <td> {{ pos_bing }} </td>
-                                        <td> {{ pos_duckduckgo }} </td>
-                                        <td> {{ data_dict.get('domain') }} </td>
-                                        <td> {{ data_dict.get('score') or 'N/A' }} </td>
-                                    </tr>
-                            {% endfor %}
-                        </table>
-                    </div> <!-- col-md-6 -->
-                </div> <!-- results-container -->
+                <div class="col-md-10 col-md-offset-1 results-container">
+                    <div class="alert alert-success" role="alert">
+                        Results for query <span class="label label-success">{{ query }}</span>
+                    </div>
+                    <table class="table">
+                        <tr>
+                            <th>Result</th>
+                            <th>Google Position</th>
+                            <th>Bing Position</th>
+                            <th>DuckDuckGo Position</th>
+                            <th>Domain</th>
+                            <th>Score</th>
+                        </tr>
+                        {% for result in results %}
+                                {% set link, data_dict = result %}
+                                {% set pos_google = data_dict.get('google') + 1 if data_dict.get('google') != None else 'N/A' %}
+                                {% set pos_bing = data_dict.get('bing') + 1 if data_dict.get('bing') != None else 'N/A' %}
+                                {% set pos_duckduckgo = data_dict.get('duckduckgo') + 1 if data_dict.get('duckduckgo') != None else 'N/A' %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ link }}">{{ data_dict['snippet'] | safe }}</a>
+                                    </td>
+                                    <td> {{ pos_google }} </td>
+                                    <td> {{ pos_bing }} </td>
+                                    <td> {{ pos_duckduckgo }} </td>
+                                    <td> {{ data_dict.get('domain') }} </td>
+                                    <td> {{ data_dict.get('score') or 'N/A' }} </td>
+                                </tr>
+                        {% endfor %}
+                    </table>
+                </div> <!-- col-md-6 -->
             {% endif %}
 
         </div> <!-- row -->

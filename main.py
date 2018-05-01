@@ -94,7 +94,7 @@ def index():
     elif request.method == 'POST':
         query = request.form['query']
         results = aws_search(query)
-        return render_template('index.html', title='Gingo Search', results=results)
+        return render_template('index.html', title='Gingo Search', results=results, query=query)
     else:
         return "Unknown method"
 
