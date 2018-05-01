@@ -34,6 +34,7 @@
                                 <th>Google Position</th>
                                 <th>Bing Position</th>
                                 <th>DuckDuckGo Position</th>
+                                <th>Domain</th>
                                 <th>Score</th>
                             </tr>
                             {% for result in results %}
@@ -43,11 +44,12 @@
                                     {% set pos_duckduckgo = data_dict.get('duckduckgo') + 1 if data_dict.get('duckduckgo') != None else 'N/A' %}
                                     <tr>
                                         <td>
-                                            <a href="{{ link }}">{{ data_dict['snippet'] }}</a>
+                                            <a href="{{ link }}">{{ data_dict['snippet'] | safe }}</a>
                                         </td>
                                         <td> {{ pos_google }} </td>
                                         <td> {{ pos_bing }} </td>
                                         <td> {{ pos_duckduckgo }} </td>
+                                        <td> {{ data_dict.get('domain') }} </td>
                                         <td> {{ data_dict.get('score') or 'N/A' }} </td>
                                     </tr>
                             {% endfor %}

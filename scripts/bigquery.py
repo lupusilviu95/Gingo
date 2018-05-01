@@ -9,7 +9,7 @@ def insert(query, data):
 	dataset_ref = bigquery_client.dataset("search")
 	table_ref = dataset_ref.table("result")
 	table = bigquery_client.get_table(table_ref)
-	rows_to_insert = [(query, json.dumps(data), str(datetime.now()))]
+	rows_to_insert = [(query.lower().strip(), json.dumps(data), str(datetime.now()))]
 	errors = bigquery_client.insert_rows(table, rows_to_insert)
 	return errors
 

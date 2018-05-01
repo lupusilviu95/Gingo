@@ -34,6 +34,9 @@ def get_results(url, params):
     response = json.loads(response.content.decode("utf-8"))
     return response if type(response) is list else []
 
+def get_domain_for_url(url):
+    parsed_uri = urlparse(url)
+    return '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
 
 def aws_search(query):
     cached_results = bigquery.search(query)
@@ -74,7 +77,9 @@ def aws_search(query):
             for engine, position in engine_results.items():
                 if engine != "snippet":
                     score += SCORES[engine] * (MAX_RESULTS - position)
-            links[link]["score"] = score
+            links[link]["score"] = '%.2f' % score
+            links[link]["domain"] = get_domain_for_url(link)
+
         err = bigquery.insert(query, sorted(links.items(), key=lambda a: a[1]["score"], reverse=True))
         return sorted(links.items(), key=lambda a: a[1]["score"], reverse=True)
 
