@@ -12,7 +12,7 @@ try:
 except ImportError:
     from urlparse import urlparse
 
-BASE_URL = "https://rbelb0crz5.execute-api.eu-central-1.amazonaws.com/prod"
+BASE_URL = "https://85j17hnivk.execute-api.eu-west-1.amazonaws.com/prod"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
@@ -60,7 +60,6 @@ def aws_search(query):
                     results_by_engine[engine] = []
 
         links = {}
-        print(results_by_engine)
 
         for engine, results in results_by_engine.items():
             for index, result in enumerate(results):
@@ -76,9 +75,8 @@ def aws_search(query):
                 if engine != "snippet":
                     score += SCORES[engine] * (MAX_RESULTS - position)
             links[link]["score"] = score
-
-            err = bigquery.insert(query, sorted(links.items(), key=lambda a: a[1]["score"], reverse=True))
-            return sorted(links.items(), key=lambda a: a[1]["score"], reverse=True)
+        err = bigquery.insert(query, sorted(links.items(), key=lambda a: a[1]["score"], reverse=True))
+        return sorted(links.items(), key=lambda a: a[1]["score"], reverse=True)
 
     return json.loads(cached_results[0])
 
