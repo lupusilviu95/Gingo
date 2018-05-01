@@ -49,7 +49,7 @@ def aws_search(query):
         with ThreadPoolExecutor(max_workers=5) as executor:
             future_to_engine_result[executor.submit(get_results, google_url, params)] = "google"
             future_to_engine_result[executor.submit(get_results, bing_url, params)] = "bing"
-            future_to_engine_result[executor.submit(get_results, duck_url, params)] = "google"
+            future_to_engine_result[executor.submit(get_results, duck_url, params)] = "duckduckgo"
 
             for future in as_completed(future_to_engine_result):
                 engine = future_to_engine_result[future]
