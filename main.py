@@ -80,8 +80,9 @@ def aws_search(query):
             links[link]["score"] = '%.2f' % score
             links[link]["domain"] = get_domain_for_url(link)
 
-        err = bigquery.insert(query, sorted(links.items(), key=lambda a: a[1]["score"], reverse=True))
-        return sorted(links.items(), key=lambda a: a[1]["score"], reverse=True)
+        results = sorted(links.items(), key=lambda a: float(a[1]["score"]), reverse=True)
+        err = bigquery.insert(query, results)
+        return results
 
     return json.loads(cached_results[0])
 
