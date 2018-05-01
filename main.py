@@ -29,38 +29,45 @@ app = Flask(
 Bootstrap(app)
 
 def aws_search(query):
-    google_url = urlparse(BASE_URL + "/google")
-    bing_url = urlparse(BASE_URL + "/bing")
-    duck_url = urlparse(BASE_URL + "/duckduckgo")
-    params = {"query": query}
-    google_response = requests.get(google_url.geturl(), headers=HEADERS, params=params)
-    bing_response = requests.get(bing_url.geturl(), headers=HEADERS, params=params)
-    duck_response = requests.get(duck_url.geturl(), headers=HEADERS, params=params)
+    cached_results = bigquery.search(query)
 
-    google_results = json.loads(google_response.content)
-    bing_results = json.loads(bing_response.content)
-    duckduckgo_results = json.loads(duck_response.content)
+    if len(cached_results) == 0:
+        google_url = urlparse(BASE_URL + "/google")
+        bing_url = urlparse(BASE_URL + "/bing")
+        duck_url = urlparse(BASE_URL + "/duckduckgo")
+        params = {"query": query}
+        google_response = requests.get(google_url.geturl(), headers=HEADERS, params=params)
+        bing_response = requests.get(bing_url.geturl(), headers=HEADERS, params=params)
+        duck_response = requests.get(duck_url.geturl(), headers=HEADERS, params=params)
 
-    results_by_engine = {"google": google_results, "bing": bing_results, "duckduckgo": duckduckgo_results}
+        google_results = json.loads(google_response.content)
+        bing_results = json.loads(bing_response.content)
+        duckduckgo_results = json.loads(duck_response.content)
 
-    links = {}
+        results_by_engine = {"google": google_results, "bing": bing_results, "duckduckgo": duckduckgo_results}
 
-    for engine, results in results_by_engine.items():
-        for index, result in enumerate(results):
-            already_found = links.get(result["url"], {})
-            already_found[engine] = index
-            already_found["snippet"] = result["snippet"] if len(result["snippet"]) > len(already_found.get("snippet", "")) else already_found.get("snippet", "")
-            links[result["url"]] = already_found
-        
+        links = {}
 
-    for link, engine_results in links.items():
-        score = 0 
-        for engine, position in engine_results.items():
-            if engine != "snippet":
-                score += SCORES[engine] * (MAX_RESULTS - position)
-        links[link]["score"] = score
+        for engine, results in results_by_engine.items():
+            for index, result in enumerate(results):
+                already_found = links.get(result["url"], {})
+                already_found[engine] = index
+                already_found["snippet"] = result["snippet"] if len(result["snippet"]) > len(already_found.get("snippet", "")) else already_found.get("snippet", "")
+                links[result["url"]] = already_found
+            
 
-    return sorted(links.items(), key=lambda a: a[1]["score"], reverse=True)
+        for link, engine_results in links.items():
+            score = 0 
+            for engine, position in engine_results.items():
+                if engine != "snippet":
+                    score += SCORES[engine] * (MAX_RESULTS - position)
+            links[link]["score"] = score
+
+        err = bigquery.insert(query, links)
+        return sorted(links.items(), key=lambda a: a[1]["score"], reverse=True)
+    else:
+        return sorted(json.loads(cached_results[0]), key=lambda a: a[1]["score"], reverse=True)
+
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -78,15 +85,10 @@ def index():
 @app.route('/search')
 def search():
     query = request.args.get("query")
-
-    cached_results = bigquery.search(query)
-
-    if len(cached_results) == 0:
-        results = aws_search(query)
-        err = bigquery.insert(query, results)
-        return jsonify(results)
-    else:
-        return jsonify(json.loads(cached_results[0]))
+    results = aws_search(query)
+    err = bigquery.insert(query, results)
+    return jsonify(results)
+    
 
 
 @app.errorhandler(500)
