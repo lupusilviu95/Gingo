@@ -63,10 +63,10 @@ def aws_search(query):
                     score += SCORES[engine] * (MAX_RESULTS - position)
             links[link]["score"] = score
 
-        err = bigquery.insert(query, links)
+        err = bigquery.insert(query, sorted(links.items(), key=lambda a: a[1]["score"], reverse=True))
         return sorted(links.items(), key=lambda a: a[1]["score"], reverse=True)
     else:
-        return sorted(json.loads(cached_results[0]), key=lambda a: a[1]["score"], reverse=True)
+        return json.loads(cached_results[0])
 
 
 
